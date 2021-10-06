@@ -43,6 +43,16 @@ paths:
         schema:
           type: number
           format: double
+      - name: carpoolerType
+        in: query
+        description: Type of the expected carpooler's journeys.
+        schema:
+          type: string
+          enum:
+          - DRIVER
+          - PASSENGER
+          - BOTH
+          default: DRIVER
       - name: date
         in: query
         description: Timestamp unix UTC en secondes représentant la date de départ.
@@ -309,7 +319,11 @@ components:
         price:
           $ref: '#/components/schemas/Price'
         driver:
-          $ref: '#/components/schemas/Driver'
+          $ref: '#/components/schemas/Carpooler'
+          description: If `carpoolJourney` is a driver journey.
+        passenger:
+          $ref: '#/components/schemas/Carpooler'
+          description: If `carpoolJourney` is a passenger journey.
         preferences:
           $ref: '#/components/schemas/Preferences'
         car:
@@ -338,35 +352,37 @@ components:
           description: Prix du trajet en euros.
           format: float
       description: Objet représentant le prix du trajet.
-    Driver:
+    Carpooler:
       type: object
+      required:
+        - id
+        - alias
       properties:
-        id:
-          type: string
-          description: Identifiant du conducteur
-        firstName:
-          type: string
-          description: Prénom du conducteur, obligatoire si « alias » n’est pas retourné
-        lastName:
-          type: string
-          description: Nom du conducteur.
-        alias:
-          type: string
-          description: Alias du conducteur. Obligatoire si « driverFirstName » n’est
-            pas retourné
-        grade:
-          type: integer
-          description: Note du conducteur de 1 à 5
-        picture:
-          type: string
-          description: Url de l’image d conducteur
-        gender:
-          type: string
-          description: Sexe du conducteur
-          enum:
-          - M
-          - F
-      description: Objet représentant un conducteur.
+          id:
+            type: string
+            description: User's unique identifier.
+          alias:
+            type: string
+            description: User's alias.
+          firstName:
+            type: string
+            description: User's first name.
+          lastName:
+            type: string
+            description: User's last name.
+          grade:
+            type: integer
+            description: User's grade from 1 to 5.
+          picture:
+            type: string
+            description: User's profile picture absolute URL.
+          gender:
+            type: string
+            description: "User's gender. 'O' stands for 'Other'."
+            enum:
+              - F
+              - M
+              - O
     Preferences:
       type: object
       properties:
