@@ -11,41 +11,41 @@ paths:
     get:
       tags:
       - carpoolJourneys
-      summary: Retourne les propositions de covoiturage.
+      summary: Give carpooling journeys
       description: |
-        WebService utilisé pour récupérer les trajets de covoiturage correspondant aux critères renseignés
+        Give carpooling journeys matching the request parameters.
       parameters:
       - name: departureLat
         in: query
-        description: Latitude du point de départ de la recherche
+        description: WGS84 latitude of the requested departure.
         required: true
         schema:
           type: number
           format: double
       - name: departureLng
         in: query
-        description: Longitude du point de départ de la recherche
+        description: WGS84 longitude of the requested departure.
         required: true
         schema:
           type: number
           format: double
       - name: arrivalLat
         in: query
-        description: Latitude du point d'arrivée de la recherche
+        description: WGS84 latitude of the requested arrival.
         required: true
         schema:
           type: number
           format: double
       - name: arrivalLng
         in: query
-        description: Longitude du point d'arrivée de la recherche
+        description: WGS84 longitude of the requested departure.
         required: true
         schema:
           type: number
           format: double
       - name: carpoolerType
         in: query
-        description: Type of the expected carpooler's journeys.
+        description: Type of the expected carpoolers' journeys.
         schema:
           type: string
           enum:
@@ -55,37 +55,40 @@ paths:
           default: DRIVER
       - name: date
         in: query
-        description: Timestamp unix UTC en secondes représentant la date de départ.
-          Si ce paramètre n’est pas présent, on considère que la date sera le moment
-          de la requête
+        description: |-
+          Requested departure datetime as a UNIX UTC timestamp. If not
+          specified, request time is considered the expected departure datetime.
         schema:
           type: integer
       - name: departureRadius
         in: query
-        description: Rayon de recherche autour du point de départ, 1 km par defaut
+        description: |-
+          Departure search radius in kilometers. Defaults to 1.0 kilometer.
         schema:
           type: number
           format: float
           default: 1.0
       - name: arrivalRadius
         in: query
-        description: Rayon de recherche autour du point d'arrivée, 1 km par defaut
+        description: |-
+          Arrival search radius in kilometers. Defaults to 1.0 kilometer.
         schema:
           type: number
           format: float
           default: 1.0
       - name: timeDelta
         in: query
-        description: Intervalle de temps en secondes, 900 par défaut. Cet intervalle
-          détermine l'intervalle maximal entre l'heure de recherche et les trajets
-          proposés
+        description: |-
+          Maximum delta in seconds between the requested 'date' and the
+          `pickupDate` of the returned journeys. Defaults to 900 seconds.
         schema:
           type: integer
           default: 900
       - name: count
         in: query
-        description: Nombre maximal de trajets proposés. Par défaut l’opérateur renverra
-          tous les trajets qu’il propose.
+        description: |-
+          Maximum number of journeys returned.
+          Defaults to all journey matching request.
         schema:
           type: integer
       responses:
@@ -156,7 +159,7 @@ components:
       properties:
         id:
           type: string
-          description: Identifiant du trajet (Obligatoire).
+          description: Unique identifier of the journey.
         pickupDate:
           type: number
           description: Unix UTC timestamp at the pick-up location.
@@ -169,11 +172,11 @@ components:
           description: Carpooling drop-off location.
         webUrl:
           type: string
-          description: Url redirigeant vers le trajet sur le site du service (Obligatoire)
+          description: URL of the journey on the webservice provider platform.
         type:
           type: string
-          description: Type de trajet proposé. Plannifié, Dynamique (Autostop) ou
-            Line (Obligatoire)
+          description: |-
+            Type of journey. A dynamic journey is happening in real time.
           enum:
           - PLANNED
           - DYNAMIC
@@ -243,26 +246,25 @@ components:
           $ref: '#/components/schemas/DeepLink'
         nbJourneys:
           type: integer
-          description: Nombre de trajets renvoyés (seulement si l'attribut `type`
-            = `LINE`)
-      description: Données représentant un trajet de covoiturage.
+          description: Count of returned journeys (only if `type=LINE`).
+
     Price:
       type: object
       properties:
         type:
           type: string
-          description: String représentant le type de trajet, soit « FREE », « PAYING
-            » ou « UNKNOWN ». La valeur « UNKNOWN » est renvoyée quand le service
-            n’est pas gratuit mais on ne connaît pas le prix du trajet.
+          description: |-
+            Either « FREE », « PAYING » or « UNKNOWN ». « UNKNOWN » is given
+            when it should be « PAYING » but we cannot set the price yet.
           enum:
           - FREE
           - PAYING
           - UNKNOWN
         amount:
           type: number
-          description: Prix du trajet en euros.
+          description: Carpooling passenger cost in euros.
           format: float
-      description: Objet représentant le prix du trajet.
+
     Carpooler:
       type: object
       required:
@@ -294,6 +296,7 @@ components:
               - F
               - M
               - O
+
     Geopoint:
       type: "object"
       required:
@@ -308,68 +311,74 @@ components:
           type: number
         poiName:
           type: string
-          description: Point-Of-Interest specific name if this geographical point is a POI.
+          description: |-
+            Point-Of-Interest specific name if this geographical point is a POI.
+
     Preferences:
       type: object
       properties:
         smoking:
           type: boolean
-          description: Détermine si le conducteur autorise de fumer dans sa voiture
+          description: |-
+            If driver journey, specifies if the driver allows smoking in the car.
         animals:
           type: boolean
-          description: Détermine si le conducteur autorise des animaux dans sa voiture
+          description: |-
+            If driver journey, specifies if the driver allows animals in the car.
         music:
           type: boolean
-          description: Détermine si le conducteur autorise de la musique dans sa voiture
+          description: |-
+            If driver journey, specifies if the driver enjoys music in the car.
         isTalker:
           type: boolean
-          description: Détermine si le conducteur aime bien parler avec les covoitureurs
+          description: |-
+            If driver journey, specifies if the driver enjoys talking with passengers.
         luggageSize:
           type: integer
-          description: Entier de 1 à 5 indiquant la taille des bagages acceptés
-      description: Object décrivant les préférences du conducteur
+          minimum: 1
+          maximum: 5
+          description: |-
+            If driver journey, specifies the size of allowed luggages
+            (from very small (1) to very big (5)).
+
     Car:
       type: object
       properties:
         model:
           type: string
-          description: Modèle de la voiture
+          description: Model of the car.
         brand:
           type: string
-          description: Marque de la voiture
-      description: Object décrivant les préférences du conducteur
+          description: Brand of the car.
+
     DeepLink:
       type: object
+      description: |-
+        Platform specific deep-link configurations. Should be provided if
+        `webUrl` does not support deferred deep linking (deep link to the
+        journey on the webservice provider mobile app, even if it is not yet
+        installed).
       properties:
         android:
-          $ref: '#/components/schemas/Android'
+          type: object
+          properties:
+            uri:
+              type: string
+              description: |-
+                URI compliant with Android conventions to open the webservice
+                provider mobile app on the screen presenting the specific journey
+                (see [this guide](https://blog.branch.io/technical-guide-to-deep-linking-on-android-chrome-intents/) for more details).
+            storeUrl:
+              type: string
+              description: |-
+                URL of the webservice provider mobile app on the PlayStore
+                in case the app is not yet installed on the device.
         ios:
-          $ref: '#/components/schemas/IOS'
-      description: Objet permettant d’ouvrir l’application du covoitureur depuis le
-        site mobile. Si ce champ n’est pas présent, le lien « webUrl  » sera utilisé.
-        Il faut bien noter que pour que cette redirection soit fonctionnelle, il faut
-        que l’application présente sur les stores gère les deepLink (cf https://developer.android.com/training/app-indexing/deep-linking.html
-        pour Android et https://dev.branch.io/getting-started/universal-app-links/guide/ios/
-        pour iOS (version 10 ou ultérieure)).
-    Android:
-      type: object
-      properties:
-        uri:
-          type: string
-          description: Uri respectant les conventions Android pour pouvoir ouvrir
-            l’application sur l’écran concernant le trajet en question (cf https://blog.branch.io/technical-guide-to-deep-linking-on-android-chrome-intents/).
-        storeUrl:
-          type: string
-          description: Url de l’application sur le PlayStore en cas ou elle ne soit
-            pas installée sur l’appareil
-      description: Objet contenant les éléments nécessaires pour ouvrir l’application
-        native depuis un navigateur mobile.
-    IOS:
-      type: object
-      properties:
-        universalLink:
-          type: string
-          description: Uri respectant les conventions iOS pour pouvoir ouvrir l’application
-            sur l’écran concernant le trajet en question.
-      description: Objet contenant les éléments nécessaires pour ouvrir l’application
-        native depuis un navigateur mobile. Un objet « ios » est composé de
+          type: object
+          properties:
+            universalLink:
+              type: string
+              description: |-
+                URI compliant with iOS conventions to open the webservice
+                provider mobile app on the screen presenting the specific journey.
+
