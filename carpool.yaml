@@ -119,16 +119,6 @@ paths:
                   err_code:
                     type: string
                     description: Problème d’authentification.
-        404:
-          description: Contenu manquant.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  err_code:
-                    type: string
-                    description: Il n’y a pas de contenu correspondant à la demande.
         429:
           description: Too Many Requests.
           headers:
