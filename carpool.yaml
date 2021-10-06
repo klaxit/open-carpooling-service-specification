@@ -90,106 +90,57 @@ paths:
           type: integer
       responses:
         200:
-          description: L'ensemble de trajets proposés
+          description: Ok. Request processed successfully.
           content:
             application/json:
               schema:
                 title: CarpoolJourneys
                 type: array
-                description: Ensemble des trajets de covoiturage proposés
                 items:
                   $ref: '#/components/schemas/CarpoolJourney'
         400:
-          description: Bad Request.
+          description: Bad Request. See error message.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  err_code:
+                  errorMessage:
                     type: string
-                    description: Requête incorrecte, les paramètres ne sont pas conformes
+                    description: |-
+                      Explain why the request couldn't be processed.
         401:
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  err_code:
-                    type: string
-                    description: Problème d’authentification.
+          description: Unauthorized. You must authenticate.
         429:
-          description: Too Many Requests.
+          description: Too Many Requests. Please slow down.
           headers:
             Retry-After:
-              description: Intervalle de temps en secondes après lequel des requêtes
-                peuvent être refaites
+              description: |-
+                How long to wait before making a new request (in seconds).
               schema:
                 type: integer
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  err_code:
-                    type: string
-                    description: Trop de requêtes dans un délai donné.
         500:
-          description: Erreur serveur
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  err_code:
-                    type: string
-                    description: Erreur serveur.
+          description: Internal Server Error. Please try again later.
+
   /status:
     get:
       tags:
       - status
-      summary: Retourne les status du web service.
-      description: |
-        WebService utilisé pour récupérer le status du web service
+      summary: Give health status of the webservice.
       responses:
         200:
-          description: L'ensemble de trajets proposés'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    description: Ok
-                description: Le web service est disponible
+          description: Ok. Webservice is available.
         429:
-          description: Too Many Requests.
+          description: Too Many Requests. Please slow down.
           headers:
             Retry-After:
-              description: Intervalle de temps en secondes après lequel des requêtes
-                peuvent être refaites
+              description: |-
+                How long to wait before making a new request (in seconds).
               schema:
                 type: integer
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  err_code:
-                    type: string
-                    description: Trop de requêtes dans un délai donné.
         500:
-          description: Erreur serveur
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  err_code:
-                    type: string
-                    description: Erreur serveur.
+          description: Internal Server Error. Please try again later.
+
 components:
   schemas:
     CarpoolJourney:
