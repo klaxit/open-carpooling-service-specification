@@ -205,13 +205,10 @@ components:
     CarpoolJourney:
       title: CarpoolJourney
       required:
-      - driverArrivalLat
-      - driverArrivalLng
-      - driverDepartureDate
-      - driverDepartureLat
-      - driverDepartureLng
-      - duration
       - id
+      - pickupDate
+      - pickup
+      - dropoff
       - type
       - webUrl
       type: object
@@ -227,22 +224,12 @@ components:
           description: Timestamp unix UTC en secondes représentant la date de départ
             du conducteur (Obligatoire).
           format: long
-        driverDepartureLat:
-          type: number
-          description: Latitude du point de départ (Obligatoire)
-          format: double
-        driverDepartureLng:
-          type: number
-          description: Longitude du point de départ (Obligatoire)
-          format: double
-        driverArrivalLat:
-          type: number
-          description: Latitude du point d’arrivée (Obligatoire)
-          format: double
-        driverArrivalLng:
-          type: number
-          description: Longitude du point d’arrivée (Obligatoire)
-          format: double
+        pickup:
+          $ref: '#/components/schemas/Geopoint'
+          description: Carpooling pick-up location.
+        dropoff:
+          $ref: '#/components/schemas/Geopoint'
+          description: Carpooling drop-off location.
         webUrl:
           type: string
           description: Url redirigeant vers le trajet sur le site du service (Obligatoire)
@@ -260,28 +247,6 @@ components:
         distance:
           type: integer
           description: Distance du trajet en mètres
-        passengerPickupLat:
-          type: number
-          description: Latitude du point de prise en charge du passager
-          format: double
-        passengerPickupLng:
-          type: number
-          description: Longitude du point de prise en charge du passager
-          format: double
-        passengerDropLat:
-          type: number
-          description: Latitude du point de dépôt en charge du passager
-          format: double
-        passengerDropLng:
-          type: number
-          description: Longitude du point de dépôt en charge du passager
-          format: double
-        driverDepartureAddress:
-          type: string
-          description: String représentant l’adresse de départ du covoiturage
-        driverArrivalAddress:
-          type: string
-          description: String représentant l’adresse de départ du covoiturage
         departureToPickupWalkingTime:
           type: integer
           description: Temps de marche pour atteindre le conducteur en secondes
@@ -383,6 +348,21 @@ components:
               - F
               - M
               - O
+    Geopoint:
+      type: "object"
+      required:
+        - longitude
+        - latitude
+      properties:
+        longitude:
+          description: WGS84 longitude of the geographical point.
+          type: number
+        latitude:
+          description: WGS84 latitude of the geographical point.
+          type: number
+        poiName:
+          type: string
+          description: Point-Of-Interest specific name if this geographical point is a POI.
     Preferences:
       type: object
       properties:
