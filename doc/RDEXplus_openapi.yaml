@@ -1,0 +1,891 @@
+# 
+# RDEX+ API specification
+#
+# License: Apache 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)
+#
+openapi: 3.0.3
+info:
+  title: RDEX+
+  description: |-
+    RDEX+ is the new version of the **Ridesharing Data EXchange** protocol. It revises completely its former syntax (and reuses the [ViaNavigo Carpool API syntax](https://doc.vianavigo.com/api-carpool/) ), and provides additionnal features.
+
+    RDEX+ is developed by [FabMob](https://fabmob.io/).
+
+
+    [![](https://raw.githubusercontent.com/fabmob/rdexplus/master/resources/rdexplus_presentation-fr.png)](https://raw.githubusercontent.com/fabmob/rdexplus/3dae2ce4e9754226578749411ecd14fa535f22f8/resources/rdexplus_presentation-fr.pdf)
+
+
+    Other resources on the topic:
+      - The report, written by Mobicoop: [RDEX+: Rendre le covoiturage interopérable pour le MaaS"](https://cloud.mobicoop.org/index.php/s/XkLtMgDDpMycp4A#pdfviewer)
+
+      
+    **To take part and contact the RDEX+ Group:**
+  contact:
+    email: rdex_covoit@framalistes.org
+    name: RDEX+ email group
+    url: 'https://framalistes.org/sympa/subscribe/rdex_covoit'
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 2.0.1
+tags:
+  - name: Search
+    description: API route to search for journeys. This route can be left opened to public.
+  - name: Interact
+    description: API routes to act upon searched journeys.
+
+#
+# API Routes    
+#
+paths:
+  /journeys:
+    get:
+      tags:
+      - Search
+      summary: Search for matching carpool journeys.
+      description: Route used to retrieve a collection of journeys matching the provided
+        criteria.
+      operationId: getJourneys
+      parameters:
+      - name: departureLat
+        in: query
+        description: Latitude of searched departure point.
+        required: true
+        schema:
+          type: number
+      - name: departureLng
+        in: query
+        description: Longitude of searched departure point.
+        required: true
+        schema:
+          type: number
+      - name: arrivalLat
+        in: query
+        description: Latitude of searched arrival point.
+        required: true
+        schema:
+          type: number
+      - name: arrivalLng
+        in: query
+        description: Longitude of searched arrival point.
+        required: true
+        schema:
+          type: number
+      - name: carpoolerType
+        in: query
+        description: Type of the expected carpooler's journeys.
+        schema:
+          $ref: '#/components/schemas/carpoolerType'
+      - name: frequency
+        in: query
+        description: Frequency of the expected carpoolers' journeys expected.
+        schema:
+          $ref: '#/components/schemas/frequency'
+      - name: departureDate
+        in: query
+        description: If `frequency=punctual` or `frequency=both`, `departureDate` specifies
+          departure datetime using a UNIX UTC timestamp in seconds. If not specified,
+          the timestamp of the request is considered the expected departure datetime.
+          If `frequency=regular`, `departureDate` specifies the beginning of the validity period
+          for the regular journey.
+        schema:
+          type: integer
+      - name: maxDate
+        in: query
+        description: If `frequency=regular` or `frequency=both`, `maxDate` specifies
+          the specifies the end of the validity period for the regular journey, as a 
+          datetime using a UNIX UTC timestamp in seconds.
+        schema:
+          type: integer
+      - name: regularSchedule
+        in: query
+        description: If `frequency=regular`, this parameter specifies the schedule of
+          expected regular journey. If several `WeekSchedule` objects are passed in
+          the array, the journey is expected to happened on all given time slots 
+          (two departures the same day is considered a possible case).
+        schema:
+            type: "array"
+            items:
+              $ref: '#/components/schemas/WeekSchedule'
+      - name: timeDelta
+        in: query
+        description: Time margin in seconds. The retrieved journeys must match the
+          given time parameters within a +`timeDelta` / -`timeDelta` interval .
+          If `frequency=regular`, this `timeDelta` is taken into account only if no
+          other value is specified for the specific day.
+        schema:
+          type: integer
+          default: 900
+      - name: departureRadius
+        in: query
+        description: Search radius in kilometers around the departure point.
+        schema:
+          type: number
+          default: 1.0
+      - name: arrivalRadius
+        in: query
+        description: Search radius in kilometers around the arrival point.
+        schema:
+          type: number
+          default: 1.0
+      - name: count
+        in: query
+        description: Maximum number of returned journeys. If missing, all matching
+          journeys are returned.
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  journeys:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Journey'
+                  nbJourneys:
+                    type: integer
+                    description: Number of returned journeys (only if `type=line`).
+        400:
+          description: Bad request. Error code can be among  `invalid_input, invalid_uri, invalid_uuid, missing_mandatory_field, missing_required_query_parameter, no_post_data, no_put_data, too_late, undefined_error, unknown_user` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        401:
+          description: Unauthorized. Error code can be among  `access_denied, signature_mismatch, timestamp_too_skewed` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Forbidden. Error code can be among  `insufficient_permissions, origin_mismatch` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: Forbidden. Error code can be   `resource_not_found` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        405:
+          description: Method not allowed. Error code can be   `unsupported_http_verb` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        409:
+          description: Conflict. Error code can be   `already_exists` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        429:
+          description: Conflict. Error code can be among  `too_many_post, too_many_queries` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Internal Error. Error code will be  `internal_error` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        501:
+          description: Not implemented. Error code will be  `not_implemented` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+                
+                
+                
+  /messages:
+    post:
+      tags:
+      - Interact
+      summary: Send a message to the owner of a retrieved journey.
+      description: Route used to allow a user to connect back to the owner of a retrieved journey through a texte message.
+      operationId: postConnections
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/ConnectionMessage'
+              type: object
+              required:
+                - recipientCarpoolerType
+              properties:
+                recipientCarpoolerType:
+                  allOf: 
+                    - $ref: '#/components/schemas/carpoolerTypeStrict'
+                  description: Defines if the recipient of this message is either the driver or the passenger.
+      responses:
+        201:
+          description: Successful operation.
+        404:
+          description: The targeted journey or user no more exists.
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+              
+  /bookings:
+    post:
+      tags:
+      - Interact
+      summary: Send a booking request to the owner of a journey.
+      description: Route used to allow a user to book a carpool to the owner of a journey. While posting a new Booking, its status shall always be set first as `status=pending`. 
+        _Reminder:_ The sender must also store the Booking object, and be ready to receive modifications of it through the PATCH /bookings 
+      operationId: postBookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Booking'
+                  
+      responses:
+        201:
+          description: Successful operation.
+        404:
+          description: The targeted journey or user no more exists.Error code can be among  `missing_journey, missing_user` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        409:
+          description: Conflict. This booking already exists. Error code is `booking_already_exists` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+        
+          
+
+  /bookings/{bookingId}:
+    patch:
+      tags:
+      - Interact
+      summary: Updates status of an existing Booking object.
+      description: Route used to update the status of an existing Booking object. Should be used usually just to accept or reject an existing Booking.
+      operationId: patchBookings
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/bookingId'
+      - name: status
+        description: New status of the Booking.
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/bookingStatus'
+      responses: 
+        200:
+          description: Successful operation.
+        401:
+          description: Unauthorized. Error code can be among  `access_denied, missing_booking_ownerhsip` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: The targeted journey, booking or user no more exists.  Error code can be among  `missing_journey, missing_booking, missing_user` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        409:
+          description: Conflict. This booking has already the new status requested. Error code is  `status_already_set`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+
+
+    get:
+      tags:
+      - Interact
+      summary: Retrieves an existing Booking object.
+      description: Route used to retrieve the details of an existing Booking object. Can only be used by the opeartor having created the Booking object. This route is provided to check if the Booking object state is similar between two operators, but its usage should be required to handle the full use case of a booking.
+      operationId: getBookings
+      parameters:
+      - name: bookingId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/bookingId'
+      responses: 
+        200:
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        401:
+          description: Unauthorized. Error code can be among  `access_denied, missing_booking_ownerhsip` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: This Booking object no more exists. Error code can be among  `missing_journey, missing_booking, missing_user` .
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+                
+
+
+#
+# Schemas 
+#              
+components:
+  schemas:
+      
+    Journey:
+      type: object
+      required: 
+        - id
+        - type
+        - operator
+        - carpoolerType
+        - user
+        - from
+        - to
+        - duration
+        - outward
+      properties:
+        id:
+          $ref: '#/components/schemas/journeyId'
+        webUrl:
+          type: string
+          description: Journey's direct URL.
+        type:
+          type: string
+          description: Type of journey. A dynamic journey is happening in real time.
+          enum:
+            - planned
+            - dynamic
+            - line
+          default: planned
+        operator:
+          $ref: '#/components/schemas/operator'
+        operatorUrl:
+          $ref: '#/components/schemas/operatorUrl'
+        carpoolerType:
+          $ref: '#/components/schemas/carpoolerType'
+        user:
+          type: object
+          required: 
+            - id
+            - alias
+          properties:
+            id:
+              type: string
+              description: User's id. 
+            alias:
+              type: string
+              description: User's alias. 
+            firstName:
+              type: string
+              description: User's first name.
+            lastName:
+              type: string
+              description: User's last name.
+            grade:
+              type: string
+              description: User's grade.
+            picture:
+              type: string
+              description: User's picture.
+            gender:
+              type: string
+              description: "User's gender. 'O' stands for 'Other'"
+              enum:
+                - F
+                - M
+                - O
+            verifiedIdentity:
+              type: boolean
+              description: true if the identity of this user has been verified by the operator or a third party; and the firstName, lastName, birthdate have been confirmed as identitical to an official identity proof document. Can be left empty if the information is not available.
+        availableSeats:
+          type: integer
+          description: Available seats. Required if `carpoolerType=driver` or `carpoolerType=both`.
+        requestedSeats:
+          type: integer
+          description: Requested seats. Required if `carpoolerType=passenger` or `carpoolerType=both`
+        from:
+          $ref: '#/components/schemas/Geopoint'
+        to:
+          $ref: '#/components/schemas/Geopoint'
+        duration:
+          type: integer
+          description: Duration of the journey, in seconds.
+        distance:
+          type: integer
+          description: Distance of the journey, in meters. Required if `cost.type=variable`.
+        journeyPolyline:
+          type: string
+          description: Full journey's itineray as [Google Encoded Polyline Algorithm Format](https://developers.google.com/maps/documentation/utilities/polylinealgorithm).
+        waypointsOnlyRoute:
+          type: string
+          description: Waypoints only route as [Google Encoded Polyline Algorithm Format](https://developers.google.com/maps/documentation/utilities/polylinealgorithm).
+        numberOfWaypoints:
+          type: integer
+          description: Number of waypoints (if any).
+        waypoints:
+          type: array
+          description: List of waypoints. Required if `numberOfWaypoints>0`.
+          items:
+            $ref: '#/components/schemas/Waypoint'
+        price:
+          type: object
+          required: 
+            - amount
+            - type
+          properties:
+            amount:
+              type: number
+              description: Journey's amount. Required if `price.type=fixed` or `price.type=variable`.
+            currency:
+              type: string
+              description: The 3-letters code of the currency in which the journey's amount is given. This letter code must respect the ISO 4217 norm.
+            type:
+              type: string
+              description: Journey's price type. `unknown` must be returned when the journey is not free, but the amount is unknown (and `price.amount` must then be left empty).
+              enum:
+                - free
+                - fixed
+                - variable
+                - unknown
+            kilometricPrice:
+              type: string
+              description: Kilometric price of the journey. Required if `price.type=variable`.
+        details:
+          type: string
+          description: Free comment.
+        vehicle:
+          type: object
+          properties:
+            details:
+              type: string
+              description: Details of the vehicle.
+            image:
+              type: string
+              description: Image of the vehicle.
+            brand:
+              type: string
+              description: Brand of the vehicle.
+            model:
+              type: string
+              description: Model of the vehicle.
+            color:
+              type: string
+              description: Color of the vehicle.
+        frequency:
+          $ref: '#/components/schemas/frequency'
+        isRoundTrip:
+          type: integer
+          description: 1 if a round-trip is proposed back from arrival to departure.
+          default: 0
+        isStopped:
+          type: integer
+          description: 1 if the journey is now stopped.
+          default: 0
+        outward:
+          $ref: '#/components/schemas/WaySchedule'
+        return:
+          description: Required if `isRoundTrip=1`.
+          allOf:
+            - $ref: '#/components/schemas/WaySchedule'
+        passengerWalkingJourney:
+          type: object
+          properties:
+            departureToPickupWalkingDistance:
+              type: integer
+              description: If `carpoolerType=driver`, walking distance in meters from the passenger departure point to the pickup point.
+            departureToPickupWalkingDuration:
+              type: integer
+              description: If `carpoolerType=driver`, walking duration in seconds from the passenger departure point to the pickup point.
+            departureToPickupWalkingPolyline:
+              type: integer
+              description: If `carpoolerType=driver`, walking itinerary as [Google Encoded Polyline Algorithm Format](https://developers.google.com/maps/documentation/utilities/polylinealgorithm) from the passenger departure point to the pickup point.
+            dropoffToArrivalWalkingDistance:
+              type: integer
+              description: If `carpoolerType=driver`, walking distance in meters from the dropoff point to passenger arrival point.
+            dropoffToArrivalWalkingDuration:
+              type: integer
+              description: If `carpoolerType=driver`, walking duration in seconds from the dropoff point to passenger arrival point.
+            dropoffToArrivalWalkingPolyline:
+              type: integer
+              description: If `carpoolerType=driver`, walking itinerary as [Google Encoded Polyline Algorithm Format](https://developers.google.com/maps/documentation/utilities/polylinealgorithm) from the dropoff point to passenger arrival point.
+        preferences:
+          type: object
+          properties:
+            smoking:
+              type: boolean
+              description: If `carpoolerType=driver`, specifies if the driver allows smoking in her/his car.
+            animals:
+              type: boolean
+              description: If `carpoolerType=driver`, specifies if the driver allows animals in her/his car.
+            music:
+              type: boolean
+              description: If `carpoolerType=driver`, specifies if the driver enjoys music in her/his car.
+            isTalker:
+              type: boolean
+              description: If `carpoolerType=driver`, specifies if the driver enjoys talking with her/his passengers.
+            luggageSize:
+              type: integer
+              minimum: 1
+              maximum: 5
+              description: If `carpoolerType=driver`, specifies the size of allowed luggages (from very small (1) to very big (5))
+        deeplink:
+          type: object
+          properties:
+            android:
+              type: object
+              properties:
+                uri:
+                  type: string
+                  description: URI respecting Android requirements to all opening of the mobile app on the screen presenting the specific journey (see [this guide](https://blog.branch.io/technical-guide-to-deep-linking-on-android-chrome-intents/) for more details).
+                storeUrl:
+                  type: string
+                  description: Mobile app URL on the PlayStore in case the app is not yet installed on the device.
+            ios:
+              type: object
+              properties:
+                universalLink:
+                  type: string
+                  description: URI respecting iOS requirements to all opening of the mobile app on the screen presenting the specific journey.
+          
+        
+            
+          
+    Geopoint:
+      type: "object"
+      required:
+        - longitude
+        - latitude
+      properties:
+        longitude:
+          description: WGS84 longitude of the geographical point.
+          type: number
+        latitude:
+          description: WGS84 latitude of the geographical point.
+          type: number
+        address:
+          type: string
+          description: Full address of the geographical point.
+        city:
+          type: string
+          description: City of the geographical point.
+        postalCode:
+          type: string
+          description: Postal code of the geographical point.
+        country:
+          type: string
+          description: Country of the geographical point.
+        poiName:
+          type: string
+          description: Point-Of-Interest specific name if this geographical point is a POI.
+          
+    Waypoint:
+      allOf:
+        - $ref: '#/components/schemas/Geopoint'
+        - type: object
+          required:
+            - mandatory
+          properties:
+            stepDistance:
+              type: integer
+              description: Distance in meters of the step from the previous point until this waypoint.
+            stepDuration:
+              type: integer
+              description: Duration in seconds of the step from the previous point until this waypoint.
+            type:
+              type: string
+              description: Type of waypoint.
+              enum:
+                - pick-up
+                - drop-off
+                - other
+            mandatory:
+              description: 1 if this waypoint is mandatory.
+              type: integer
+              enum:
+                - 0
+                - 1
+                
+          
+    WeekSchedule:
+      type: "object"
+      properties:
+        mondayTime:
+          description: Time using a UTC partial time string (example "08:30:00") of departure for the journey (outward or return) on Mondays, if any.
+          type: string
+          format: partial-time
+        mondayTimeDelta:
+          description: Optional time margin in seconds. The departure is expected within a +`mondayTimeDelta` / -`mondayTimeDelta` interval around `mondayTime`. If missing, the `timeDelta` value of `journey` object will be used. If both are missing, 900 is the default value.
+          type: integer
+          default: 900
+        tuesdayTime:
+          description: Time using a UTC partial time string (example "08:30:00") of departure for the journey (outward or return) on Tuesdays, if any.
+          type: string
+          format: partial-time
+        tuesdayTimeDelta:
+          description: Optional time margin in seconds. The departure is expected within a +`tuesdayTimeDelta` / -`tuesdayTimeDelta` interval around `tuesdayTime`. If missing, the `timeDelta` value of `journey` object will be used. If both are missing, 900 is the default value.
+          type: integer
+          default: 900
+        wednesdayTime:
+          description: Time using a UTC partial time string (example "08:30:00") of departure for the journey (outward or return) on Wednesdays, if any.
+          type: string
+          format: partial-time
+        wednesdayTimeDelta:
+          description: Optional time margin in seconds. The departure is expected within a +`wednesdayTimeDelta` / -`wednesdayTimeDelta` interval around `wednesdayTime`. If missing, the `timeDelta` value of `journey` object will be used. If both are missing, 900 is the default value.
+          type: integer
+          default: 900
+        thursdayTime:
+          description: Time using a UTC partial time string (example "08:30:00") of departure for the journey (outward or return) on Thursdays, if any.
+          type: string
+          format: partial-time
+        thursdayTimeDelta:
+          description: Optional time margin in seconds. The departure is expected within a +`thursdayTimeDelta` / -`thursdayTimeDelta` interval around `thursdayTime`. If missing, the `timeDelta` value of `journey` object will be used. If both are missing, 900 is the default value.
+          type: integer
+          default: 900
+        fridayTime:
+          description: Time using a UTC partial time string (example "08:30:00") of departure for the journey (outward or return) on Fridays, if any.
+          type: string
+          format: partial-time
+        fridayTimeDelta:
+          description: Optional time margin in seconds. The departure is expected within a +`fridayTimeDelta` / -`fridayTimeDelta` interval around `fridayTime`. If missing, the `timeDelta` value of `journey` object will be used. If both are missing, 900 is the default value.
+          type: integer
+          default: 900
+        saturdayTime:
+          description: Time using a UTC partial time string (example "08:30:00") of departure for the journey (outward or return) on Saturdays, if any.
+          type: string
+          format: partial-time
+        saturdayTimeDelta:
+          description: Optional time margin in seconds. The departure is expected within a +`saturdayTimeDelta` / -`saturdayTimeDelta` interval around `saturdayTime`. If missing, the `timeDelta` value of `journey` object will be used. If both are missing, 900 is the default value.
+          type: integer
+          default: 900
+        sundayTime:
+          description: Time using a UTC partial time string (example "08:30:00") of departure for the journey (outward or return) on Sundays, if any.
+          type: string
+          format: partial-time
+        sundayTimeDelta:
+          description: Optional time margin in seconds. The departure is expected within a +`sundayTimeDelta` / -`sundayTimeDelta` interval around `sundayTime`. If missing, the `timeDelta` value of `journey` object will be used. If both are missing, 900 is the default value.
+          type: integer
+          default: 900
+                
+          
+    WaySchedule:
+      type: "object"
+      required: 
+        - departureDate
+      properties:
+        departureDate:
+          type: integer
+          description: If `frequency=punctual` or `frequency=both`, `departureDate` specifies departure datetime using a UNIX UTC timestamp in seconds. If not specified, the timestamp of the request is considered the expected departure datetime.
+            If `frequency=regular`, `departureDate` specifies the beginning of the validity period for the regular journey.
+        maxDate:
+          type: integer
+          description: If `frequency=regular` or `frequency=both`, `maxDate` specifies the specifies the end of the validity period for the regular journey, as a datetime using a UNIX UTC timestamp in seconds.
+        regularSchedule:
+          type: "array"
+          items:
+            $ref: '#/components/schemas/WeekSchedule'
+          description: If `frequency=regular`, this parameter specifies the schedule of expected regular journey. If several `WeekSchedule` objects are passed in the array, the journey is expected to happened on all given time slots(two departures the same day is considered a possible case).
+        timeDelta:
+          type: integer
+          default: 900
+          description: Time margin in seconds. The retrieved journeys must match the given time parameters within a +`timeDelta` / -`timeDelta` interval . If `frequency=regular`, this `timeDelta` is taken into account only if no other value is specified for the specific day.
+    
+          
+    ConnectionMessage:
+      type: object
+      required:
+        - driverJourneyId
+        - driverUserid
+        - passengerJourneyId
+        - passengerUserid
+      properties:
+        driverJourneyId:
+          $ref: '#/components/schemas/journeyId'
+        driverUserid:
+          type: string
+          description: User's id as retrieved by the route GET /journeys.
+        driverAlias:
+          type: string
+          description: Driver's name alias.
+        details:
+          type: string
+          maxLength: 500
+          description: Free text content of the message. The message can contain all the details (phone number, email, etc.) allowing the recipient to call back the sender in order to carpool with him/her.
+        passengerJourneyId:
+          $ref: '#/components/schemas/journeyId'
+        passengerUserid:
+          type: string
+          description: User's id as retrieved by the route GET /journeys.
+        passengerAlias:
+          type: string
+          description: Passenger's name alias.
+        driverOperator:
+          $ref: '#/components/schemas/operator'
+        driverOperatorUrl:
+          $ref: '#/components/schemas/operatorUrl'
+        passengerOperator:
+          $ref: '#/components/schemas/operator'
+        passengerOperatorUrl:
+          $ref: '#/components/schemas/operatorUrl'
+    
+    Booking:
+      allOf:
+        - $ref: '#/components/schemas/ConnectionMessage'
+      type: object
+      required:
+        - bookingId
+        - frequency
+        - outwardSchedule
+        - price
+      properties:
+        bookingId:
+          $ref: '#/components/schemas/bookingId'
+        frequency:
+          $ref: '#/components/schemas/frequency'
+        outwardSchedule:
+          $ref: '#/components/schemas/WaySchedule'
+        returnSchedule:
+          $ref: '#/components/schemas/WaySchedule'
+        status:
+          $ref: '#/components/schemas/bookingStatus'
+        price:
+          type: number
+          description: Proposed and agreed (when `status=accepted`) price for one way (either outwrd or return) of the journey.
+      
+      
+      
+    journeyId:
+      type: string
+      minLength: 1
+      maxLength: 255
+      description: Journey's id.
+        In order to be a basis for carpool proof, this id must match the `journey_id` that could be provided to a carpool proof register as described for example in [this documentation of an open source product for France](https://tech.covoiturage.beta.gouv.fr/partners/preuves/schema.html#schema-json-complet).
+    
+    carpoolerTypeStrict:
+      type: string
+      description: Role of the carpooler.
+      enum:
+        - driver
+        - passenger
+      default: driver
+    
+    carpoolerType:
+      allOf:
+        - $ref: '#/components/schemas/carpoolerTypeStrict'
+      type: string
+      description: Type of the carpooler's journey.
+      enum:
+        - both
+      
+    operator:
+      type: string
+      description: Name of the operator owning this journey.
+      
+    operatorUrl:
+      type: string
+      description: Website of the operator owning this journey.
+  
+    frequency:
+      type: string
+      description: Frequency of the journey. We can have `frequency=both` only if parameter of GET /journeys.
+      enum:
+        - punctual
+        - regular
+        - both
+      default: punctual
+        
+    bookingId:
+      type: string
+      description: Booking id is common between both operators, and must be set as a MD5 hashing of a string concatenating the `driverJourneyId`, the `passengerJourneyId` and a UNIX UTC timestamp in seconds.
+      
+    bookingStatus:
+      type: string
+      description: Status of the booking.
+      enum:
+        - pending
+        - accepted
+        - rejected
+        - cancelled
+      default: pending
+        
+      
+      
+    Error:
+      type: "object"
+      required:
+        - errorCode
+      properties:
+        errorCode:
+          type: string
+          description: Code of the error.
+          enum:
+            - access_denied
+            - already_exists
+            - insufficient_permissions
+            - internal_error
+            - invalid_input
+            - invalid_uri
+            - invalid_uuid
+            - missing_mandatory_field
+            - missing_required_query_parameter
+            - no_post_data
+            - no_put_data
+            - not_implemented
+            - origin_mismatch
+            - resource_not_found
+            - signature_mismatch
+            - timestamp_too_skewed
+            - too_late
+            - too_many_post
+            - too_many_queries
+            - undefined_error
+            - unknown_user
+            - unsupported_http_verb
+        errorMessage:
+          type: string
+          description: Longer optional message describing the error.
+
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      name: api_key
+      in: header
+      description: Each `api_key` must be unique to each operator, in order to be able to confirm that any GET /bookings request is made by the authorized organization.
+        An operator can decide to implement either the `apiKeyAuth` or the `bearerAuth` security scheme.
+    bearerAuth:          
+      type: http
+      scheme: bearer
+      bearerFormat: JWT # optional, arbitrary value for documentation purposes
+      description: The JWT bearer object schema can be freely defined but must include a freely defined unique operator id (could be `operator_url`) attribute in order to be able to confirm that any GET /bookings request is made by the authorized organization.
+        An operator can decide to implement either the `apiKeyAuth` or the `bearerAuth` security scheme.
+

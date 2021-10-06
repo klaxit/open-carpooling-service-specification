@@ -1,0 +1,387 @@
+---
+  swagger: "2.0"
+  info: 
+    title: "Vianavigo Covoiturage API"
+    description: "Documentation des WebServices de Covoiturage Vianavigo"
+    version: "1.1.0"
+  host: "stif-recette.sig.sword-group.com"
+  schemes: 
+    - "http"
+  basePath: "/api_vn2"
+  produces: 
+    - "application/json"
+  paths: 
+    /carpoolJourneys: 
+      get: 
+        tags: 
+          - "carpoolJourneys"
+        summary: "Retourne les propositions de covoiturage."
+        description: "WebService utilisé pour récupérer les trajets de covoiturage correspondant aux critères renseignés\n"
+        parameters: 
+          - 
+            name: "departureLat"
+            in: "query"
+            required: true
+            description: "Latitude du point de départ de la recherche"
+            type: "number"
+            format: "double"
+          - 
+            name: "departureLng"
+            in: "query"
+            required: true
+            description: "Longitude du point de départ de la recherche"
+            type: "number"
+            format: "double"
+          - 
+            name: "arrivalLat"
+            in: "query"
+            required: true
+            description: "Latitude du point d'arrivée de la recherche"
+            type: "number"
+            format: "double"
+          - 
+            name: "arrivalLng"
+            in: "query"
+            required: true
+            description: "Longitude du point d'arrivée de la recherche"
+            type: "number"
+            format: "double"
+          - 
+            name: "date"
+            in: "query"
+            required: false
+            description: "Timestamp unix UTC en secondes représentant la date de départ. Si ce paramètre n’est pas présent, on considère que la date sera le moment de la requête"
+            type: "integer"
+          - 
+            name: "departureRadius"
+            in: "query"
+            required: false
+            description: "Rayon de recherche autour du point de départ, 1 km par defaut"
+            type: "number"
+            format: "float"
+            default: 1
+          - 
+            name: "arrivalRadius"
+            in: "query"
+            required: false
+            description: "Rayon de recherche autour du point d'arrivée, 1 km par defaut"
+            type: "number"
+            format: "float"
+            default: 1
+          - 
+            name: "timeDelta"
+            in: "query"
+            required: false
+            description: "Intervalle de temps en secondes, 900 par défaut. Cet intervalle détermine l'intervalle maximal entre l'heure de recherche et les trajets proposés"
+            type: "integer"
+            default: 900
+          - 
+            name: "count"
+            in: "query"
+            required: false
+            description: "Nombre maximal de trajets proposés. Par défaut l’opérateur renverra tous les trajets qu’il propose."
+            type: "integer"
+        responses: 
+          200: 
+            description: "L'ensemble de trajets proposés"
+            schema: 
+              type: "array"
+              description: "Ensemble des trajets de covoiturage proposés"
+              title: "CarpoolJourneys"
+              items: 
+                $ref: "#/definitions/CarpoolJourney"
+          400: 
+            description: "Bad Request."
+            schema: 
+              type: "object"
+              properties: 
+                err_code: 
+                  type: "string"
+                  description: "Requête incorrecte, les paramètres ne sont pas conformes"
+          401: 
+            description: "Unauthorized."
+            schema: 
+              type: "object"
+              properties: 
+                err_code: 
+                  type: "string"
+                  description: "Problème d’authentification."
+          404: 
+            description: "Contenu manquant."
+            schema: 
+              type: "object"
+              properties: 
+                err_code: 
+                  type: "string"
+                  description: "Il n’y a pas de contenu correspondant à la demande."
+          429: 
+            description: "Too Many Requests."
+            headers: 
+              Retry-After: 
+                description: "Intervalle de temps en secondes après lequel des requêtes peuvent être refaites"
+                type: "integer"
+            schema: 
+              type: "object"
+              properties: 
+                err_code: 
+                  type: "string"
+                  description: "Trop de requêtes dans un délai donné."
+          500: 
+            description: "Erreur serveur"
+            schema: 
+              type: "object"
+              properties: 
+                err_code: 
+                  type: "string"
+                  description: "Erreur serveur."
+    /status: 
+      get: 
+        tags: 
+          - "status"
+        summary: "Retourne les status du web service."
+        description: "WebService utilisé pour récupérer le status du web service\n"
+        responses: 
+          200: 
+            description: "L'ensemble de trajets proposés'"
+            schema: 
+              type: "object"
+              description: "Le web service est disponible"
+              properties: 
+                status: 
+                  type: "string"
+                  description: "Ok"
+          429: 
+            description: "Too Many Requests."
+            headers: 
+              Retry-After: 
+                description: "Intervalle de temps en secondes après lequel des requêtes peuvent être refaites"
+                type: "integer"
+            schema: 
+              type: "object"
+              properties: 
+                err_code: 
+                  type: "string"
+                  description: "Trop de requêtes dans un délai donné."
+          500: 
+            description: "Erreur serveur"
+            schema: 
+              type: "object"
+              properties: 
+                err_code: 
+                  type: "string"
+                  description: "Erreur serveur."
+  definitions: 
+    CarpoolJourney: 
+      type: "object"
+      description: "Données représentant un trajet de covoiturage."
+      title: "CarpoolJourney"
+      required: 
+        - "id"
+        - "driverDepartureDate"
+        - "duration"
+        - "driverDepartureLat"
+        - "driverDepartureLng"
+        - "driverArrivalLat"
+        - "driverArrivalLng"
+        - "webUrl"
+        - "type"
+      properties: 
+        id: 
+          type: "string"
+          description: "Identifiant du trajet (Obligatoire)."
+        duration: 
+          type: "integer"
+          description: "Temps du trajet de covoiturage en secondes (Obligatoire)"
+        driverDepartureDate: 
+          type: "number"
+          format: "long"
+          description: "Timestamp unix UTC en secondes représentant la date de départ du conducteur (Obligatoire)."
+        driverDepartureLat: 
+          type: "number"
+          format: "double"
+          description: "Latitude du point de départ (Obligatoire)"
+        driverDepartureLng: 
+          type: "number"
+          format: "double"
+          description: "Longitude du point de départ (Obligatoire)"
+        driverArrivalLat: 
+          type: "number"
+          format: "double"
+          description: "Latitude du point d’arrivée (Obligatoire)"
+        driverArrivalLng: 
+          type: "number"
+          format: "double"
+          description: "Longitude du point d’arrivée (Obligatoire)"
+        webUrl: 
+          type: "string"
+          description: "Url redirigeant vers le trajet sur le site du service (Obligatoire)"
+        type: 
+          type: "string"
+          description: "Type de trajet proposé. Plannifié, Dynamique (Autostop) ou Line (Obligatoire)"
+          enum: 
+            - "PLANNED"
+            - "DYNAMIC"
+            - "LINE"
+        pickupTime: 
+          type: "integer"
+          description: "Temps d’attente pour l'arrivée du covoitureur en secondes."
+        distance: 
+          type: "integer"
+          description: "Distance du trajet en mètres"
+        passengerPickupLat: 
+          type: "number"
+          format: "double"
+          description: "Latitude du point de prise en charge du passager"
+        passengerPickupLng: 
+          type: "number"
+          format: "double"
+          description: "Longitude du point de prise en charge du passager"
+        passengerDropLat: 
+          type: "number"
+          format: "double"
+          description: "Latitude du point de dépôt en charge du passager"
+        passengerDropLng: 
+          type: "number"
+          format: "double"
+          description: "Longitude du point de dépôt en charge du passager"
+        driverDepartureAddress: 
+          type: "string"
+          description: "String représentant l’adresse de départ du covoiturage"
+        driverArrivalAddress: 
+          type: "string"
+          description: "String représentant l’adresse de départ du covoiturage"
+        departureToPickupWalkingTime: 
+          type: "integer"
+          description: "Temps de marche pour atteindre le conducteur en secondes"
+        dropoffToArrivalWalkingTime: 
+          type: "integer"
+          description: "Temps de marche pour atteindre la destination du passager depuis le lieu de dépôt de la voiture en secondes"
+        departureToPickupWalkingDistance: 
+          type: "integer"
+          description: "Distance de marche à pied pour atteindre le conducteur en mètres"
+        dropoffToArrivalWalkingDistance: 
+          type: "integer"
+          description: "Distance de marche à pied pour atteindre la destination du passager depuis le lieu de dépôt de la voiture en mètres"
+        journeyPolyline: 
+          type: "string"
+          description: "String encodé représentant le trajet du covoitureur. Ce string contient un array de points encodé qui représente le chemin approximatif du trajet. L'encodage ce fait avec l'algorithme polylines de Google, https://developers.google.com/maps/documentation/utilities/polylinealgorithm"
+        departureToPickupWalkingPolyline: 
+          type: "string"
+          description: "String encodé représentant le trajet piéton pour atteindre l’arrivée du passager depuis la voiture. Ce string contient un array de points encodé qui représente le chemin approximatif du trajet. L'encodage ce fait avec l'algorithme polylines de Google, https://developers.google.com/maps/documentation/utilities/polylinealgorithm"
+        dropoffToArrivalWalkingPolyline: 
+          type: "string"
+          description: "String représentant le trajet piéton pour atteindre l’arrivée du passager depuis la voiture. Ce string contient un array de points encodé qui représente le chemin approximatif du trajet. L'encodage ce fait avec l'algorithme polylines de Google, https://developers.google.com/maps/documentation/utilities/polylinealgorithm"
+        availableSeats: 
+          type: "integer"
+          description: "Nombre de places disponibles dans la voiture."
+        price: 
+          $ref: "#/definitions/Price"
+        driver: 
+          $ref: "#/definitions/Driver"
+        preferences: 
+          $ref: "#/definitions/Preferences"
+        car: 
+          $ref: "#/definitions/Car"
+        deepLink: 
+          $ref: "#/definitions/DeepLink"
+        nbJourneys: 
+          type: "integer"
+          description: "Nombre de trajets renvoyés (seulement si l'attribut `type` = `LINE`)"
+    Price: 
+      type: "object"
+      description: "Objet représentant le prix du trajet."
+      properties: 
+        type: 
+          type: "string"
+          description: "String représentant le type de trajet, soit « FREE », « PAYING » ou « UNKNOWN ». La valeur « UNKNOWN » est renvoyée quand le service n’est pas gratuit mais on ne connaît pas le prix du trajet."
+          enum: 
+            - "FREE"
+            - "PAYING"
+            - "UNKNOWN"
+        amount: 
+          type: "number"
+          format: "float"
+          description: "Prix du trajet en euros."
+    Driver: 
+      type: "object"
+      description: "Objet représentant un conducteur."
+      properties: 
+        id: 
+          type: "string"
+          description: "Identifiant du conducteur"
+        firstName: 
+          type: "string"
+          description: "Prénom du conducteur, obligatoire si « alias » n’est pas retourné"
+        lastName: 
+          type: "string"
+          description: "Nom du conducteur."
+        alias: 
+          type: "string"
+          description: "Alias du conducteur. Obligatoire si « driverFirstName » n’est pas retourné"
+        grade: 
+          type: "integer"
+          description: "Note du conducteur de 1 à 5"
+        picture: 
+          type: "string"
+          description: "Url de l’image d conducteur"
+        gender: 
+          type: "string"
+          description: "Sexe du conducteur"
+          enum: 
+            - "M"
+            - "F"
+    Preferences: 
+      type: "object"
+      description: "Object décrivant les préférences du conducteur"
+      properties: 
+        smoking: 
+          type: "boolean"
+          description: "Détermine si le conducteur autorise de fumer dans sa voiture"
+        animals: 
+          type: "boolean"
+          description: "Détermine si le conducteur autorise des animaux dans sa voiture"
+        music: 
+          type: "boolean"
+          description: "Détermine si le conducteur autorise de la musique dans sa voiture"
+        isTalker: 
+          type: "boolean"
+          description: "Détermine si le conducteur aime bien parler avec les covoitureurs"
+        luggageSize: 
+          type: "integer"
+          description: "Entier de 1 à 5 indiquant la taille des bagages acceptés"
+    Car: 
+      type: "object"
+      description: "Object décrivant les préférences du conducteur"
+      properties: 
+        model: 
+          type: "string"
+          description: "Modèle de la voiture"
+        brand: 
+          type: "string"
+          description: "Marque de la voiture"
+    DeepLink: 
+      type: "object"
+      description: "Objet permettant d’ouvrir l’application du covoitureur depuis le site mobile. Si ce champ n’est pas présent, le lien « webUrl  » sera utilisé. Il faut bien noter que pour que cette redirection soit fonctionnelle, il faut que l’application présente sur les stores gère les deepLink (cf https://developer.android.com/training/app-indexing/deep-linking.html pour Android et https://dev.branch.io/getting-started/universal-app-links/guide/ios/ pour iOS (version 10 ou ultérieure))."
+      properties: 
+        android: 
+          $ref: "#/definitions/Android"
+        ios: 
+          $ref: "#/definitions/IOS"
+    Android: 
+      type: "object"
+      description: "Objet contenant les éléments nécessaires pour ouvrir l’application native depuis un navigateur mobile."
+      properties: 
+        uri: 
+          type: "string"
+          description: "Uri respectant les conventions Android pour pouvoir ouvrir l’application sur l’écran concernant le trajet en question (cf https://blog.branch.io/technical-guide-to-deep-linking-on-android-chrome-intents/)."
+        storeUrl: 
+          type: "string"
+          description: "Url de l’application sur le PlayStore en cas ou elle ne soit pas installée sur l’appareil"
+    IOS: 
+      type: "object"
+      description: "Objet contenant les éléments nécessaires pour ouvrir l’application native depuis un navigateur mobile. Un objet « ios » est composé de"
+      properties: 
+        universalLink: 
+          type: "string"
+          description: "Uri respectant les conventions iOS pour pouvoir ouvrir l’application sur l’écran concernant le trajet en question."
+
