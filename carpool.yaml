@@ -216,13 +216,9 @@ components:
         id:
           type: string
           description: Identifiant du trajet (Obligatoire).
-        duration:
-          type: integer
-          description: Temps du trajet de covoiturage en secondes (Obligatoire)
-        driverDepartureDate:
+        pickupDate:
           type: number
-          description: Timestamp unix UTC en secondes représentant la date de départ
-            du conducteur (Obligatoire).
+          description: Unix UTC timestamp at the pick-up location.
           format: long
         pickup:
           $ref: '#/components/schemas/Geopoint'
@@ -241,54 +237,63 @@ components:
           - PLANNED
           - DYNAMIC
           - LINE
-        pickupTime:
+        duration:
           type: integer
-          description: Temps d’attente pour l'arrivée du covoitureur en secondes.
+          description: If a driver journey, duration in seconds.
         distance:
           type: integer
-          description: Distance du trajet en mètres
+          description: If a driver journey, distance in meters.
         departureToPickupWalkingTime:
           type: integer
-          description: Temps de marche pour atteindre le conducteur en secondes
+          description: |-
+            If a driver journey, walking time from
+            the requested departure location to the pick-up location.
         dropoffToArrivalWalkingTime:
           type: integer
-          description: Temps de marche pour atteindre la destination du passager depuis
-            le lieu de dépôt de la voiture en secondes
+          description: |-
+            If a driver journey, walking time to the
+            requested arrival location from the drop-off location.
         departureToPickupWalkingDistance:
           type: integer
-          description: Distance de marche à pied pour atteindre le conducteur en mètres
+          description: |-
+            If a driver journey, walking distance from
+            the requested departure location to the pick-up location.
         dropoffToArrivalWalkingDistance:
           type: integer
-          description: Distance de marche à pied pour atteindre la destination du
-            passager depuis le lieu de dépôt de la voiture en mètres
+          description: |-
+            If a driver journey, walking distance to the
+            requested arrival location from the drop-off location.
         journeyPolyline:
           type: string
-          description: String encodé représentant le trajet du covoitureur. Ce string
-            contient un array de points encodé qui représente le chemin approximatif
-            du trajet. L'encodage ce fait avec l'algorithme polylines de Google, https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+          description: |-
+            Carpooling journey itinerary as a
+            [Google Encoded Polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm).
         departureToPickupWalkingPolyline:
           type: string
-          description: String encodé représentant le trajet piéton pour atteindre
-            l’arrivée du passager depuis la voiture. Ce string contient un array de
-            points encodé qui représente le chemin approximatif du trajet. L'encodage
-            ce fait avec l'algorithme polylines de Google, https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+          description: |-
+            If a driver journey, walking
+            [Google Encoded Polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm)
+            from the requested departure location to the pick-up location.
         dropoffToArrivalWalkingPolyline:
           type: string
-          description: String représentant le trajet piéton pour atteindre l’arrivée
-            du passager depuis la voiture. Ce string contient un array de points encodé
-            qui représente le chemin approximatif du trajet. L'encodage ce fait avec
-            l'algorithme polylines de Google, https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+          description: |-
+            If a driver journey, walking
+            [Google Encoded Polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm)
+            to the requested arrival location from the drop-off location.
         availableSeats:
           type: integer
-          description: Nombre de places disponibles dans la voiture.
+          description: If a driver journey, available seats.
+        requestedSeats:
+          type: integer
+          description: If a passenger journey, requested seats.
         price:
           $ref: '#/components/schemas/Price'
         driver:
           $ref: '#/components/schemas/Carpooler'
-          description: If `carpoolJourney` is a driver journey.
+          description: If a driver journey, description of the driver.
         passenger:
           $ref: '#/components/schemas/Carpooler'
-          description: If `carpoolJourney` is a passenger journey.
+          description: If a passenger journey, description of the passenger.
         preferences:
           $ref: '#/components/schemas/Preferences'
         car:
