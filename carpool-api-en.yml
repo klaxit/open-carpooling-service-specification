@@ -1,0 +1,391 @@
+openapi: 3.0.1
+info:
+  title: ""
+  description: ""
+  version: 0.0.1
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+paths:
+  /carpoolJourneys:
+    get:
+      tags:
+      - carpoolJourneys
+      summary: Give carpooling journeys
+      description: |
+        Give carpooling journeys matching the request parameters.
+      parameters:
+      - name: departureLat
+        in: query
+        description: WGS84 latitude of the requested departure.
+        required: true
+        schema:
+          type: number
+          format: double
+      - name: departureLng
+        in: query
+        description: WGS84 longitude of the requested departure.
+        required: true
+        schema:
+          type: number
+          format: double
+      - name: arrivalLat
+        in: query
+        description: WGS84 latitude of the requested arrival.
+        required: true
+        schema:
+          type: number
+          format: double
+      - name: arrivalLng
+        in: query
+        description: WGS84 longitude of the requested departure.
+        required: true
+        schema:
+          type: number
+          format: double
+      - name: date
+        in: query
+        description: |-
+          Requested departure datetime as a UNIX UTC timestamp. If not
+          specified, request time is considered the expected departure datetime.
+        schema:
+          type: integer
+      - name: departureRadius
+        in: query
+        description: |-
+          Departure search radius in kilometers. Defaults to 1.0 kilometer.
+        schema:
+          type: number
+          format: float
+          default: 1.0
+      - name: arrivalRadius
+        in: query
+        description: |-
+          Arrival search radius in kilometers. Defaults to 1.0 kilometer.
+        schema:
+          type: number
+          format: float
+          default: 1.0
+      - name: timeDelta
+        in: query
+        description: |-
+          Maximum delta in seconds between the requested 'date' and the
+          `driverDepartureDate` of the returned journeys.
+          Defaults to 900 seconds.
+        schema:
+          type: integer
+          default: 900
+      - name: count
+        in: query
+        description: |-
+          Maximum number of journeys returned.
+          Defaults to all journey matching request.
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Ok. Request processed successfully.
+          content:
+            application/json:
+              schema:
+                title: CarpoolJourneys
+                type: array
+                items:
+                  $ref: '#/components/schemas/CarpoolJourney'
+        400:
+          description: Bad Request. See error message.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: |-
+                      Explain why the request couldn't be processed.
+        401:
+          description: Unauthorized. You must authenticate.
+        429:
+          description: Too Many Requests. Please slow down.
+          headers:
+            Retry-After:
+              description: |-
+                How long to wait before making a new request (in seconds).
+              schema:
+                type: integer
+        500:
+          description: Internal Server Error. Please try again later.
+
+  /status:
+    get:
+      tags:
+      - status
+      summary: Give health status of the webservice.
+      responses:
+        200:
+          description: Ok. Webservice is available.
+        429:
+          description: Too Many Requests. Please slow down.
+          headers:
+            Retry-After:
+              description: |-
+                How long to wait before making a new request (in seconds).
+              schema:
+                type: integer
+        500:
+          description: Internal Server Error. Please try again later.
+
+components:
+  schemas:
+    CarpoolJourney:
+      title: CarpoolJourney
+      required:
+      - id
+      - driverArrivalLat
+      - driverArrivalLng
+      - driverDepartureDate
+      - driverDepartureLat
+      - driverDepartureLng
+      - duration
+      - type
+      - webUrl
+      type: object
+      properties:
+        id:
+          type: "string"
+          description: Unique identifier of the journey.
+        driverDepartureDate:
+          type: number
+          description: |-
+            Driver departure datetime as a UNIX UTC timestamp in seconds.
+          format: long
+        driverDepartureLat:
+          type: "number"
+          format: "double"
+          description: Latitude of the departure.
+        driverDepartureLng:
+          type: "number"
+          format: "double"
+          description: Longitude of the departure.
+        driverArrivalLat:
+          type: "number"
+          format: "double"
+          description: Latitude of the arrival.
+        driverArrivalLng:
+          type: "number"
+          format: "double"
+          description: Longitude of the arrival.
+        duration:
+          type: integer
+          description: Carpooling duration in seconds.
+        webUrl:
+          type: string
+          description: URL of the journey on the webservice provider platform.
+        type:
+          type: string
+          description: |-
+            Type of journey. A dynamic journey is happening in real time.
+          enum:
+          - PLANNED
+          - DYNAMIC
+          - LINE
+        pickupTime:
+          type: integer
+          description: Waiting time before the arrival of the driver.
+        distance:
+          type: "integer"
+          description: Carpooling distance in meters.
+        passengerPickupLat:
+          type: "number"
+          format: "double"
+          description: Latitude of the passenger pick-up point.
+        passengerPickupLng:
+          type: "number"
+          format: "double"
+          description: Longitude of the passenger pick-up point.
+        passengerDropLat:
+          type: "number"
+          format: "double"
+          description: Latitude of the passenger drop-off point.
+        passengerDropLng:
+          type: "number"
+          format: "double"
+          description: Longitude of the passenger drop-off point.
+        driverDepartureAddress:
+          type: string
+          description: String representing the departure address of the driver.
+        driverArrivalAddress:
+          type: string
+          description: String representing the arrival address of the driver.
+        departureToPickupWalkingTime:
+          type: integer
+          description: |-
+            Walking time from the requested departure location
+            to the pick-up location.
+        dropoffToArrivalWalkingTime:
+          type: integer
+          description: |-
+            Walking time to the requested arrival location
+            from the drop-off location.
+        departureToPickupWalkingDistance:
+          type: integer
+          description: |-
+            Walking distance from the requested departure location
+            to the pick-up location.
+        dropoffToArrivalWalkingDistance:
+          type: integer
+          description: |-
+            Walking distance to the requested arrival location
+            from the drop-off location.
+        journeyPolyline:
+          type: string
+          description: |-
+            Carpooling journey itinerary as a
+            [Google Encoded Polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm).
+        departureToPickupWalkingPolyline:
+          type: string
+          description: |-
+            Walking
+            [Google Encoded Polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm)
+            from the requested departure location to the pick-up location.
+        dropoffToArrivalWalkingPolyline:
+          type: string
+          description: |-
+            Walking
+            [Google Encoded Polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm)
+            to the requested arrival location from the drop-off location.
+        availableSeats:
+          type: integer
+          description: If a driver journey, available seats.
+        price:
+          $ref: '#/components/schemas/Price'
+        driver:
+          $ref: '#/components/schemas/Driver'
+        preferences:
+          $ref: '#/components/schemas/Preferences'
+        car:
+          $ref: '#/components/schemas/Car'
+        deepLink:
+          $ref: '#/components/schemas/DeepLink'
+        nbJourneys:
+          type: integer
+          description: Count of returned journeys (only if `type=LINE`).
+
+    Price:
+      type: object
+      properties:
+        type:
+          type: string
+          description: |-
+            Either « FREE », « PAYING » or « UNKNOWN ». « UNKNOWN » is given
+            when it should be « PAYING » but we cannot set the price yet.
+          enum:
+          - FREE
+          - PAYING
+          - UNKNOWN
+        amount:
+          type: number
+          description: Carpooling passenger cost in euros.
+          format: float
+
+    Driver:
+      type: object
+      required:
+        - id
+        - alias
+      properties:
+        id:
+          type: string
+          description: User's unique identifier.
+        alias:
+          type: string
+          description: User's alias.
+        firstName:
+          type: string
+          description: User's first name.
+        lastName:
+          type: string
+          description: User's last name.
+        grade:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: User's grade from 1 to 5.
+        picture:
+          type: string
+          description: User's profile picture absolute URL.
+        gender:
+          type: string
+          description: User's gender. 'O' stands for 'Other'.
+          enum:
+            - F
+            - M
+            - O
+
+    Preferences:
+      type: object
+      properties:
+        smoking:
+          type: boolean
+          description: |-
+            If driver journey, specifies if the driver allows smoking in the car.
+        animals:
+          type: boolean
+          description: |-
+            If driver journey, specifies if the driver allows animals in the car.
+        music:
+          type: boolean
+          description: |-
+            If driver journey, specifies if the driver enjoys music in the car.
+        isTalker:
+          type: boolean
+          description: |-
+            If driver journey, specifies if the driver enjoys talking with passengers.
+        luggageSize:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: |-
+            If driver journey, specifies the size of allowed luggages.
+            From very small (1) to very big (5).
+
+    Car:
+      type: object
+      properties:
+        model:
+          type: string
+          description: Model of the car.
+        brand:
+          type: string
+          description: Brand of the car.
+
+    DeepLink:
+      type: object
+      description: |-
+        Platform specific deep-link configurations. It SHOULD be provided if
+        `webUrl` does not support deferred deep linking (deep link to the
+        journey on the webservice provider mobile app, even if it is not yet
+        installed).
+      properties:
+        android:
+          type: object
+          properties:
+            uri:
+              type: string
+              description: |-
+                URI compliant with Android conventions to open the webservice
+                provider mobile app on the screen presenting the specific journey
+                (see [this guide](https://blog.branch.io/technical-guide-to-deep-linking-on-android-chrome-intents/) for more details).
+            storeUrl:
+              type: string
+              description: |-
+                URL of the webservice provider mobile app on the PlayStore
+                in case the app is not yet installed on the device.
+        ios:
+          type: object
+          properties:
+            universalLink:
+              type: string
+              description: |-
+                URI compliant with iOS conventions to open the webservice
+                provider mobile app on the screen presenting the specific journey.
