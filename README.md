@@ -32,4 +32,5 @@ Starting from (Vianavigo Carpool API specification)[https://doc.vianavigo.com/ap
 
 ## 2 - Connect
 
-TODO
+Specification is detailled here: [main-specification.md](main-specification.md).
+
