@@ -361,11 +361,7 @@ components:
 
     DeepLink:
       type: object
-      description: |-
-        Platform specific deep-link configurations. It SHOULD be provided if
-        `webUrl` does not support deferred deep linking (deep link to the
-        journey on the webservice provider mobile app, even if it is not yet
-        installed).
+      description: Platform specific deep-link configurations.
       properties:
         android:
           type: object
