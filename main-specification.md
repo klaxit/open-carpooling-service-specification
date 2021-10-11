@@ -75,7 +75,7 @@ The authorization endpoint is often `/authorize` but it MAY be something else, d
 
 * **`client_id`**: REQUIRED. The unique identifier of the CLIENT for the PROVIDER.
 
-* **`redirect_uri`**: REQUIRED. A valid URL recognized by your mobile application as an app link. Depending on the target platform, [Android app links](https://developer.android.com/training/app-links) or [iOS universal links](https://developer.apple.com/documentation/xcode/supporting-universal-links-in-your-app) MUST be used, so only the CLIENT app is able to get the authorization callback through `redirect_uri`.
+* **`redirect_uri`**: REQUIRED. A valid URL recognized by your mobile application as an app link. Depending on the target OS, [Android app links](https://developer.android.com/training/app-links) or [iOS universal links](https://developer.apple.com/documentation/xcode/supporting-universal-links-in-your-app) MUST be used, so only the CLIENT app is able to get the authorization callback through `redirect_uri`.
 
 * **`pkce_code_challenge_method`**: RECOMMENDED. PKCE code challenge method, S256 (SHA-256) MUST be used if the CLIENT app supports it as mentioned in [RFC 7636 - section 4.2](https://datatracker.ietf.org/doc/html/rfc7636#section-4.2).
 
@@ -105,9 +105,18 @@ The redirect parameters MAY also include `state` if it was provided while initia
 
 If the authentication process is fails, the PROVIDER MUST also redirect to the `redirect_uri`, providing [standard error response parameters](https://openid.net/specs/openid-connect-core-1_0.html#AuthError).
 
-### 4 - Exchanging the code for an access_token
+### 4 - Transmit code server side (OPTIONAL)
+
+This step is RECOMMANDED. It SHOULD NOT be implemented if PKCE is not used for this flow.
+
+During this step, CLIENT native app MUST transmit `code` and `code_verifier` to the CLIENT server. Method for transmitting this information is left at the discretion of the CLIENT.
+
+With this step, next steps will be performed server-side, preventing `client_secret` from beeing exposed client-side.
+
+### 5 - Exchanging the code for an access_token
 
 CLIENT MUST call the token endpoint of the PROVIDER with the `code` returned as a parameter of the `redirect_uri`. It will allow the client to get a short-living `access_token`.
+
 
 The token endpoint is often `/token` but it MAY be something else, depending on the PROVIDER configuration. Call to the token endpoint has the following signature:
 
@@ -138,7 +147,7 @@ Response from the PROVIDER will at least include an `access_token` and an `id_to
 
 The `id_token` MUST be validated by the CLIENT according to [OpenID Connect 1.0 specification - section 3.1.3.7](https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation).
 
-### 4 - Getting user info
+### 6 - Getting user info
 
 Using the `access_token` from the previous step, CLIENT can retrieve the end-user claims from the PROVIDER by calling the user info endpoint.
 
@@ -169,8 +178,9 @@ In a sign-up scenario, CLIENT SHOULD use the OpenID Connect claims to pre-fill u
 
 If claims are updated on the PROVIDER platform, CLIENT SHOULD NOT update user info accordingly. After the initial authentication, user info will leave separately.
 
-If the end-user decide to revoke access of the CLIENT to the [...]
+If the end-user decides to disconnect its PROVIDER account from the CLIENT platform, CLIENT MUST delete `access_token` and `refresh_token` of the PROVIDER for this user. CLIENT MAY decide to disconnect the user from its platform in this case. No additional step SHOULD be taken by the CLIENT.
 
-TODO
+[...]
+
 
 
