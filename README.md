@@ -24,12 +24,6 @@ With these changes that must be discussed :
 Additional change that should be discussed (may be less consensual / breaking change) :
 - make `driver` mandatory and remove `nbJourneys`. Are response with multiple journeys and no specification of the driver really used ?
 
-
-### `carpool-api-both-drivers-passengers.yml`
-Starting from (Vianavigo Carpool API specification)[https://doc.vianavigo.com/api-carpool/], it tries to support passengers' journeys.
-
-**It includes too many breaking changes**.
-
 ## 2 - Connect
 
 Specification is detailled here: [main-specification.md](main-specification.md).
