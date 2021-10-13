@@ -20,6 +20,7 @@ With these changes that must be discussed :
 - make `driverDepartureDate`, `driverDepartureLat`, `driverDepartureLng`, `driverArrivalLat`, `driverArrivalLng` optionals. They are not necessary to present a consistent journey to a passenger.
 - add optional `passengerPickupAddress` and `passengerDropAddress`, as it's the ones passenger may care about.
 - remove `pickupTime`, as it can be calculated far more reliably by the consuming platform (difference between current time dans `passengerPickupDate`).
+- add an optional `currency` field to make the standard i18n-ready.
 
 Additional change that should be discussed (may be less consensual / breaking change) :
 - make `driver` mandatory and remove `nbJourneys`. Are response with multiple journeys and no specification of the driver really used ?
