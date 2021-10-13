@@ -113,10 +113,9 @@ During this step, CLIENT native app MUST transmit `code` and `code_verifier` to 
 
 With this step, next steps will be performed server-side, preventing `client_secret` from beeing exposed client-side.
 
-### 5 - Exchanging the code for an access_token
+### 5 - Exchanging the code for tokens
 
-CLIENT MUST call the token endpoint of the PROVIDER with the `code` returned as a parameter of the `redirect_uri`. It will allow the client to get a short-living `access_token`.
-
+Using the token endpoint of the PROVIDER with the `code` returned as a parameter of the `redirect_uri`, CLIENT can retrieve tokens enabling it to access the end-user data on the PROVIDER.
 
 The token endpoint is often `/token` but it MAY be something else, depending on the PROVIDER configuration. Call to the token endpoint has the following signature:
 
@@ -143,7 +142,7 @@ curl -X POST '.../token' \
 
 * **`pkce_code_verifier`**: RECOMMENDED. If PKCE was used during [step 1](#connect-step-1).
 
-Response from the PROVIDER will at least include an `access_token` and an `id_token`.
+Response from the PROVIDER MUST at least include an `access_token` and an `id_token`. It MAY also include a `refresh_token` of which usage is not part of this specification.
 
 The `id_token` MUST be validated by the CLIENT according to [OpenID Connect 1.0 specification - section 3.1.3.7](https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation).
 
@@ -176,11 +175,6 @@ Response from the PROVIDER SHOULD comply with [OpenID Connect 1.0 standard claim
 
 In a sign-up scenario, CLIENT SHOULD use the OpenID Connect claims to pre-fill user information.
 
-If claims are updated on the PROVIDER platform, CLIENT SHOULD NOT update user info accordingly. After the initial authentication, user info will leave separately.
+If claims are updated on the PROVIDER platform, CLIENT SHOULD NOT update user info accordingly. After the specified flow is completed, user info SHOULD leave independently on the PROVIDER and the CLIENT platforms.
 
-If the end-user decides to disconnect its PROVIDER account from the CLIENT platform, CLIENT MUST delete `access_token` and `refresh_token` of the PROVIDER for this user. CLIENT MAY decide to disconnect the user from its platform in this case. No additional step SHOULD be taken by the CLIENT.
-
-[...]
-
-
-
+If a user decides to disconnect its PROVIDER account from the CLIENT platform, CLIENT MUST delete any record of an `access_token` or a `refresh_token` obtained from the PROVIDER for this user. CLIENT MAY also decide to disconnect the user from its platform, but no additional step SHOULD be taken by the CLIENT.
