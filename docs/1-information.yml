@@ -291,8 +291,13 @@ components:
           - UNKNOWN
         amount:
           type: number
-          description: Carpooling passenger cost in euros.
+          description: |-
+            Carpooling passenger cost. If `currency` is unspecified,
+            this will be expressed in Euro (€).
           format: float
+        currency:
+          type: string
+          description: ISO 4217 code representing the currency of the price.
 
     Driver:
       type: object
