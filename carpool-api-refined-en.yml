@@ -293,6 +293,9 @@ components:
           type: number
           description: Carpooling passenger cost in euros.
           format: float
+        currency:
+          type: string
+          description: ISO 4217 code representing the currency of the price.
 
     Driver:
       type: object
