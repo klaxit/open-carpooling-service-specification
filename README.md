@@ -1,6 +1,6 @@
-# Drafts for the carpool API spec
+# Drafts for OCSS (Open Carpooling Service Specification)
 
-This repository include drafts for building an open carpool specification.
+This repository include drafts for building an open carpooling specification.
 
 ## 1 - Information
 
@@ -27,5 +27,5 @@ Additional change that should be discussed (may be less consensual / breaking ch
 
 ## 2 - Connect
 
-Specification is detailled here: [main-specification.md](main-specification.md).
+Specification is detailled here: [main-specification.md](main-specification.md#Connect).
 
