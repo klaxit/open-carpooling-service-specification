@@ -7,12 +7,11 @@ This repository include drafts for building an open carpooling specification.
 This repo provides specifications draft for a new carpooling API standard.
 
 ### `carpool-api-en.yml`
-A perfect copy of the (Vianavigo Carpool API specification)[https://doc.vianavigo.com/api-carpool/] translated in English.
+A perfect copy of the (Vianavigo Carpool API specification)[https://doc.vianavigo.com/api-carpool/] translated in English. Except some minor modifications on HTTP statuses.
 
-Except some minor modifications on HTTP statuses.
 ### `carpool-api-refined-en.yml`
 
-A perfect copy of the (Vianavigo Carpool API specification)[https://doc.vianavigo.com/api-carpool/] translated in English.
+A new proposition compatible with (Vianavigo Carpool API specification)[https://doc.vianavigo.com/api-carpool/], but modified according to 5 years feedbacks in production.
 
 With these changes that must be discussed :
 - add a mandatory `passengerPickupDate` as it's the one date the requesting passenger cares about.
