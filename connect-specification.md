@@ -26,13 +26,13 @@ This module is a specialization of the [OpenID Connect 1.0 specification](https:
 * The PTA is the OpenID Provider (PROVIDER)
 * The Operator is the Relying Party (CLIENT)
 
-This module is follows the latest official guidelines available on implementing OAuth 2.0 for Native apps, [RCF 8252](https://tools.ietf.org/html/rfc8252) and [IETF OAuth 2.0 Security Best Practices](https://tools.ietf.org/html/draft-ietf-oauth-security-topics-15).
+This module follows the latest official guidelines available on implementing OAuth 2.0 for Native apps, [RCF 8252](https://tools.ietf.org/html/rfc8252) and [IETF OAuth 2.0 Security Best Practices](https://tools.ietf.org/html/draft-ietf-oauth-security-topics-15).
 
 More specifically, it uses the [Authorization Code Flow](https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth) as the [Implicit Flow is known to be vulnerable](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics-15#section-2.1.2).
 
 Optionnaly, it also takes advantage of [Proof Key for Code Exchange (PKCE)](https://auth0.com/docs/flows/concepts/auth-code-pkce) to prevent the `client_secret` beeing exposed client-side. A requirement emphasized in [RCF 8252 — section-5.3.3](https://tools.ietf.org/html/rfc6819#section-5.3.3).
 
-This specification MUST be compatible with [OpenID Connect Foundation Android SDK](https://github.com/openid/AppAuth-Android) and [OpenID Connect Foundation iOS SDK](https://github.com/openid/AppAuth-ios). These implemententations SHALL be used by the PROVIDER to support this process as they are widely supported and audited.
+This specification MUST be compatible with [OpenID Connect Foundation Android SDK](https://github.com/openid/AppAuth-Android) and [OpenID Connect Foundation iOS SDK](https://github.com/openid/AppAuth-ios). These implemententations SHALL be used by any CLIENT for mobile implementations as they are widely supported and audited.
 
 ## Detailled flow
 
@@ -44,7 +44,7 @@ This specification MUST be compatible with [OpenID Connect Foundation Android SD
 
 Authentication process is initiated by the CLIENT (Operator), by opening the authorize URL of the PROVIDER (PTA).
 
-The authentication process MUST be initiated through an external user-agent (such as the browser or in-app browser tabs), as opposed to an embeded user-agent (such as web-views) as described in [RFC 8252 - section 4](https://tools.ietf.org/html/rfc8252#section-4).
+For mobile CLIENT applications, the authentication process MUST be initiated through an external user-agent (such as the browser or in-app browser tabs), as opposed to an embeded user-agent (such as web-views) as described in [RFC 8252 - section 4](https://tools.ietf.org/html/rfc8252#section-4).
 
 The authorization endpoint is often `/authorize` but it MAY be something else, depending on the PROVIDER configuration. Call to the authorization endpoint is done as follow:
 
@@ -65,7 +65,7 @@ The authorization endpoint is often `/authorize` but it MAY be something else, d
 
 * **`client_id`**: REQUIRED. The unique identifier of the CLIENT for the PROVIDER.
 
-* **`redirect_uri`**: REQUIRED. A valid URL recognized by your mobile application as an app link. Depending on the target OS, [Android app links](https://developer.android.com/training/app-links) or [iOS universal links](https://developer.apple.com/documentation/xcode/supporting-universal-links-in-your-app) MUST be used, so only the CLIENT app is able to get the authorization callback through `redirect_uri`.
+* **`redirect_uri`**: REQUIRED. Redirection URI to which the response will be sent as specified in [OpenID Connect 1.0 specification - section 3.1.2.1](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest). For mobile CLIENT applications, the URL MUST be recognized by the application as an app link. Depending on the target OS, [Android app links](https://developer.android.com/training/app-links) or [iOS universal links](https://developer.apple.com/documentation/xcode/supporting-universal-links-in-your-app) MUST be used, so only the CLIENT app is able to get the authorization callback through `redirect_uri`.
 
 * **`pkce_code_challenge_method`**: RECOMMENDED. PKCE code challenge method, S256 (SHA-256) MUST be used if the CLIENT app supports it as mentioned in [RFC 7636 - section 4.2](https://datatracker.ietf.org/doc/html/rfc7636#section-4.2).
 
@@ -73,7 +73,7 @@ The authorization endpoint is often `/authorize` but it MAY be something else, d
 
 * **`state`**: OPTIONAL. Opaque value used to maintain state between the request and the callback, to prevent CSRF attacks (see [RFC 6819 - section 5.3.5](https://datatracker.ietf.org/doc/html/rfc6819#section-5.3.5).
 
-If the PROVIDER supports Proof Key for Code Exchange (PKCE), `code_challenge` and `code_challenge_method` parameters MUST be provided. If not, the `state` parameter MUST be used to prevent CSRF attacks (see https://tools.ietf.org/html/draft-ietf-oauth-security-topics-15#section-4.7.1).
+If the PROVIDER supports Proof Key for Code Exchange (PKCE), `code_challenge` and `code_challenge_method` parameters MUST be provided. If not, the `state` parameter MUST be used to prevent CSRF attacks as specified in [OAuth 2.0 Security Best Current Practice - section 4.7.1](https://tools.ietf.org/html/draft-ietf-oauth-security-topics-15#section-4.7.1).
 
 The PROVIDER response MUST be a web process allowing the end-user to enter its PROVIDER authentication credentials.
 
@@ -87,17 +87,17 @@ The PROVIDER authentication web process MUST includes an explicit consent from t
 
 ### 3 - Handling the redirect
 
-As the `redirect_uri` is an app link, it will allow to redirect the user back to the CLIENT app.
-
 If the authentication process is successful, the PROVIDER MUST redirect to the `redirect_uri`. The redirect parameters MUST include `code`.
 
 The redirect parameters MAY also include `state` if it was provided while initiating the authentication process. If so, it MUST match the `state` passed as parameter on [step 1](#connect-step-1).
 
 If the authentication process is fails, the PROVIDER MUST also redirect to the `redirect_uri`, providing [standard error response parameters](https://openid.net/specs/openid-connect-core-1_0.html#AuthError).
 
+For mobile CLIENT applications, as the `redirect_uri` MUST be an app link, it will allow to redirect the user back to the CLIENT app.
+
 ### 4 - Transmit code server side (OPTIONAL)
 
-This step is RECOMMANDED. It SHOULD NOT be implemented if PKCE is not used for this flow.
+This step is RECOMMENDED. It SHOULD NOT be implemented if PKCE is not used for this flow.
 
 During this step, CLIENT native app MUST transmit `code` and `code_verifier` to the CLIENT server. Method for transmitting this information is left at the discretion of the CLIENT.
 
