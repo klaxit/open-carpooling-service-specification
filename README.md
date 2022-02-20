@@ -12,7 +12,7 @@ A perfect copy of the (Vianavigo Carpool API specification)[https://doc.vianavig
 
 ### `carpool-api-refined-en.yml`
 
-A new proposition compatible with (Vianavigo Carpool API specification)[https://doc.vianavigo.com/api-carpool/], but modified according to 5 years feedbacks in production.
+A new proposition compatible with (Vianavigo Carpool API specification)[https://doc.vianavigo.com/api-carpool/], but modified according to 5 years feedbacks in production, with up to 2M driver journeys search queries a day (for Klaxit alone).
 
 With these changes that must be discussed :
 - add a mandatory `passengerPickupDate` as it's the one date the requesting passenger cares about.
@@ -27,5 +27,12 @@ Additional change that should be discussed (may be less consensual / breaking ch
 
 ## 2 - Connect
 
-Specification proposal is detailled here: [connect-specification.md](connect-specification.md).
+Klaxit has been supporting a "Connect" feature, allowing its visitors to use
+their MaaS account to connect to Klaxit, for 3+ years. To date, more than
+100K users are using this technology to connect to Klaxit.
+
+Klaxit has historically built a founding article about the [best pratices to implement an OIDC flow on mobile](https://medium.com/klaxit-techblog/openid-connect-for-mobile-apps-fcce3ec3472).
+
+And presents here a [draft specification](connect-specification.md) to standardize
+these best practises. It covers additionnal aspects as the GDPR compliance of the flows.
 
