@@ -1,22 +1,12 @@
 # Indroduction
 
-TODO (overview)
+This specification provides precise guidelines on how to implement a "connect"
+feature with a MaaS plateform as the identity provider and a carpooling operator
+as the relying party.
 
 ## Requirements Notation and Conventions
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "PROVIDERTIONAL" in this document are to be interpreted as described in [RFC 2119](http://tools.ietf.org/html/rfc2119).
-
-# Journeys
-
-## Functional overview
-
-The purpose of this module is to provide an API for Public Transport Authorities (PTA) multimodal journey planners. It allows these systems to add carpooling journeys planning capabilities.
-
-## Technical specification
-
-This [technical specification](carpool-api-en.yml) is available as an [OpenAPI 3.0.3 specification](https://swagger.io/specification/).
-
-# Connect
 
 ## Functional overview
 

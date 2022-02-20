@@ -2,12 +2,13 @@
 
 This repository include drafts for building an open carpooling specification.
 
-## 1 - Information
+## 1 - Driver journeys
 
-This repo provides specifications draft for a new carpooling API standard.
+This repo provides 2 proposal of specifications for a standardized carpooling
+API adressing driver journeys search.
 
 ### `carpool-api-en.yml`
-A perfect copy of the (Vianavigo Carpool API specification)[https://doc.vianavigo.com/api-carpool/] translated in English. Except some minor modifications on HTTP statuses.
+A perfect copy of the (Vianavigo Carpool API specification)[https://doc.vianavigo.com/api-carpool/] translated in English.
 
 ### `carpool-api-refined-en.yml`
 
@@ -26,5 +27,5 @@ Additional change that should be discussed (may be less consensual / breaking ch
 
 ## 2 - Connect
 
-Specification is detailled here: [main-specification.md](main-specification.md#Connect).
+Specification proposal is detailled here: [connect-specification.md](connect-specification.md).
 
